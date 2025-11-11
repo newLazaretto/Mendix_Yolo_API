@@ -1,16 +1,20 @@
 import httpx
 import json
 from urllib.parse import urljoin
+from pydantic import TypeAdapter
 from typing import List, Dict, Any
 from app.core.config import settings
-from app.schemas.pipeline import InboundRequest, SourceResponse
+from app.schemas.pipeline import InboundRequest, SourceCollection
 
-async def fetch_from_source(req: InboundRequest) -> SourceResponse:
+async def fetch_from_source(req: InboundRequest) -> List[SourceCollection]:
     params = {"Date": req.Date.isoformat(), "Side": req.Side}
     async with httpx.AsyncClient(timeout=30) as client:
         r = await client.get(settings.EXTERNAL_SOURCE_URL, params=params)
         r.raise_for_status()
-        return SourceResponse.model_validate(r.json())
+        data = r.json()
+        ta = TypeAdapter(List[SourceCollection])
+        return ta.validate_python(data)
+
 
 def build_sink_url() -> str:
     base = settings.SINK_BASE_URL

@@ -5,7 +5,6 @@ from pydantic import BaseModel, Field, AwareDatetime
 class InboundRequest(BaseModel):
     Date: AwareDatetime = Field(..., description="UTC ISO8601")
     Side: str = Field(..., pattern="^(LEFT|RIGHT)$")
-    Equipment: Optional[str] = Field(None, description="Opcional - identifica o equipamento")
 
 # ---- resposta do GET ----
 class SourceImage(BaseModel):
@@ -13,10 +12,10 @@ class SourceImage(BaseModel):
     Port: int
     Section: int
     IsThermal: bool
-    Name: str
     Base64String: str
+    Name: str
 
-class SourceResponse(BaseModel):
+class SourceCollection(BaseModel):
     Side: str
     Date: AwareDatetime
     Images: List[SourceImage]

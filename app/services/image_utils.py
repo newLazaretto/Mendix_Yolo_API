@@ -1,20 +1,18 @@
-import base64, re, numpy as np, cv2
+# app/services/image_utils.py
+import base64, re, cv2, numpy as np
 
-DATA_URI_RE = re.compile(r"^data:image/[^;]+;base64,")
+_DATA_URL_RE = re.compile(r'^data:.*;base64,', re.IGNORECASE)
 
-def base64_to_rgb_ndarray(b64: str):
-    if not b64:
-        raise ValueError("Base64 vazio.")
-    b64_clean = DATA_URI_RE.sub("", b64.strip())
-    try:
-        img_bytes = base64.b64decode(b64_clean, validate=True)
-    except Exception as e:
-        raise ValueError(f"Base64 inválido: {e}")
-    arr = np.frombuffer(img_bytes, dtype=np.uint8)
+def base64_to_rgb_ndarray(b64: str) -> np.ndarray:
+    # remove prefixo data URL se houver
+    raw = _DATA_URL_RE.sub('', b64.strip())
+    buf = base64.b64decode(raw)
+    arr = np.frombuffer(buf, dtype=np.uint8)
     img_bgr = cv2.imdecode(arr, cv2.IMREAD_COLOR)
     if img_bgr is None:
-        raise ValueError("Falha ao decodificar (cv2.imdecode=None).")
+        raise ValueError("Falha ao decodificar base64 para imagem.")
     return cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+
 
 def bgr_to_base64_png(img_bgr: np.ndarray) -> str:
     ok, buf = cv2.imencode(".png", img_bgr)
