@@ -32,7 +32,7 @@ async def process_inbound_and_forward(req: InboundRequest) -> Tuple[List[Aggrega
     processed_total = 0
 
     field_name = settings.SINK_TEMPERATURE_FIELD_NAME  # "Temperature"
-    equipment = (req.Equipment or settings.DEFAULT_EQUIPMENT).strip()
+    #equipment = "Forno"
 
     for col in collections:
         stored_images: List[StoredImage] = []
@@ -67,21 +67,24 @@ async def process_inbound_and_forward(req: InboundRequest) -> Tuple[List[Aggrega
             )
 
             if temps:
-                sink_records.append({
-                    "Timestamp": _iso_z(col.Date),
-                    "Equipment": equipment,
-                    "Side": _normalize_side(im.Side),
-                    "Port": int(im.Port),
-                    "Section": _section_string(im.Name, im.Section),
-                    field_name: [float(x) for x in temps],
-                })
+                ts = _iso_z(col.Date)
+                side = _normalize_side(im.Side)
+                port = int(im.Port)
+                section = _section_string(im.Section)
+
+                for t in temps:
+                    sink_records.append({
+                        "Timestamp": ts,
+                        "Side": side,
+                        "Port": port,
+                        "Section": section,
+                        field_name: float(t),
+                    })
             else:
                 print(f"[PIPE] SKIP {im.Name}: empty temps")
 
         aggregated_list.append(AggregatedPayload(Side=col.Side, Date=col.Date, Images=stored_images))
 
-    print(f"[PIPE] total sink_records={len(sink_records)}")
-    if sink_records:
         await post_to_sink_records(sink_records)
 
-    return aggregated_list, processed_total
+    return aggregated_list, processed_total 
