@@ -33,3 +33,23 @@ class AggregatedPayload(BaseModel):
     Side: str
     Date: AwareDatetime
     Images: List[StoredImage]
+
+class TemperatureRecord(BaseModel):
+    Timestamp: str
+    Side: str
+    Port: int
+    Section: int
+    Temperature: float
+
+class ValveRecord(BaseModel):
+    Timestamp: str
+    Side: str
+    Port: int
+    Section: int
+    Valve_1: Optional[float] = None
+    Valve_2: Optional[float] = None
+    Valve_3: Optional[float] = None
+
+class MixedResponse(BaseModel):
+    temperatures: List[TemperatureRecord]
+    valves: List[ValveRecord]
